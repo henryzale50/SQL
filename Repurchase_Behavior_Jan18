@@ -1,0 +1,45 @@
+DROP TABLE IF EXISTS email_OrderCount_Jan18;
+
+CREATE TEMPORARY TABLE email_OrderCount_Jan18
+SELECT email
+	, MIN(created_at) AS first_order_date
+	, COUNT(id) AS order_count
+FROM shopify_orders
+WHERE created_at < '2018-05-01'
+	AND email IS NOT NULL
+	AND email != ''
+GROUP BY email
+HAVING MIN(created_at) BETWEEN '2018-01-01' AND '2018-01-31'
+AND COUNT(*) < 6
+;
+
+DROP TABLE IF EXISTS email_OrderCount_aggregate_Jan18;
+
+CREATE TEMPORARY TABLE email_OrderCount_aggregate_Jan18
+SELECT order_count AS number_of_orders
+	, COUNT(email) AS number_of_customers
+FROM email_OrderCount_Jan18
+GROUP BY number_of_orders
+;
+
+SELECT SUM(number_of_customers)
+FROM email_OrderCount_aggregate_Jan18
+;
+-- NEED TO HARDCODE IN THE TOTAL FROM THE ABOVE SUBQUERY
+
+DROP TABLE IF EXISTS NewCust_PurchCount_Jan18;
+
+CREATE TABLE NewCust_PurchCount_Jan18
+SELECT * 
+FROM (
+SELECT number_of_orders
+	, ROUND(number_of_customers/11729, 5) AS percent_total
+FROM email_OrderCount_aggregate_Jan18
+) AS temp_NewCust_PurchCount_Jan18;
+
+ALTER TABLE NewCust_PurchCount_Jan18
+ADD Year INT
+DEFAULT 2018;
+
+SELECT *
+FROM NewCust_PurchCount_Jan18;
