@@ -1,0 +1,17 @@
+DROP TABLE IF EXISTS Customers_FirstOrder_LastOrder_OrderCount;
+
+CREATE TABLE Customers_FirstOrder_LastOrder_OrderCount
+SELECT * 
+FROM (
+SELECT email
+	, MIN(created_at) AS first_order_date
+    , MAX(created_at) AS last_order_date
+    , COUNT(id) AS order_count
+FROM shopify_orders AS so
+WHERE email <> ''
+GROUP BY email
+ORDER BY first_order_date DESC
+) AS temp_Customers_FirstOrder_LastOrder_OrderCount;
+
+SELECT *
+FROM Customers_FirstOrder_LastOrder_OrderCount
